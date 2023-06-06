@@ -44,6 +44,7 @@ type copyOptions struct {
 	encryptLayer             []int                     // The list of layers to encrypt
 	encryptionKeys           []string                  // Keys needed to encrypt the image
 	decryptionKeys           []string                  // Keys needed to decrypt the image
+	maxParallelDownloads     uint                      // The maximum layers to pull at the same time. Applies to a single copy operation.
 }
 
 func copyCmd(global *globalOptions) *cobra.Command {
@@ -95,6 +96,7 @@ See skopeo(1) section "IMAGE NAMES" for the expected format
 	flags.StringSliceVar(&opts.encryptionKeys, "encryption-key", []string{}, "*Experimental* key with the encryption protocol to use needed to encrypt the image (e.g. jwe:/path/to/key.pem)")
 	flags.IntSliceVar(&opts.encryptLayer, "encrypt-layer", []int{}, "*Experimental* the 0-indexed layer indices, with support for negative indexing (e.g. 0 is the first layer, -1 is the last layer)")
 	flags.StringSliceVar(&opts.decryptionKeys, "decryption-key", []string{}, "*Experimental* key needed to decrypt the image")
+	flags.UintVar(&opts.maxParallelDownloads, "max-parallel-pulls", 6, "The maximum layers to pull at the same time (defaults to `6` if not specified or zet to `0`). Applies to a single copy operation.")
 	return cmd
 }
 
@@ -300,6 +302,7 @@ func (opts *copyOptions) run(args []string, stdout io.Writer) (retErr error) {
 			OciDecryptConfig:                 decConfig,
 			OciEncryptLayers:                 encLayers,
 			OciEncryptConfig:                 encConfig,
+			MaxParallelDownloads:             opts.maxParallelDownloads,
 		})
 		if err != nil {
 			return err
